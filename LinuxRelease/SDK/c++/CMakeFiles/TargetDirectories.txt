@@ -1,0 +1,3 @@
+/home/lyhwsl/hw_software_challenge/LinuxRelease/SDK/c++/CMakeFiles/main.dir
+/home/lyhwsl/hw_software_challenge/LinuxRelease/SDK/c++/CMakeFiles/edit_cache.dir
+/home/lyhwsl/hw_software_challenge/LinuxRelease/SDK/c++/CMakeFiles/rebuild_cache.dir
