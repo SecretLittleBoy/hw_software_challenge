@@ -52,10 +52,13 @@ bool calculateDistance() {
             nb.ID = j;
             nb.distance = Distance[abs(workbenchs[i].indexX- workbenchs[j].indexX)] [abs(workbenchs[i].indexY - workbenchs[j].indexY)];
             workbenchs[i].nearestWorkbench.push_back(nb);
-            if(isSellWorkbench[i][j]) workbenchs[i].nearestSellWorkbench.push_back(nb);
+            if(isSellWorkbench[workbenchs[i].type][workbenchs[j].type]) workbenchs[i].nearestSellWorkbench.push_back(nb);
         }
-        std::sort(workbenchs[i].nearestWorkbench.begin(),
-            workbenchs[i].nearestWorkbench.end(),
+        std::sort(workbenchs[i].nearestWorkbench.begin(), workbenchs[i].nearestWorkbench.end(),
+            [](const nearWorkbench& a, const nearWorkbench& b) {
+                return a.distance < b.distance;
+            });
+        std::sort(workbenchs[i].nearestSellWorkbench.begin(), workbenchs[i].nearestSellWorkbench.end(),
             [](const nearWorkbench& a, const nearWorkbench& b) {
                 return a.distance < b.distance;
             });
@@ -132,13 +135,14 @@ bool readFrameUntilOK() {
 //    }
 //    return false;
 //}
+
 void findTargetForRobots() {
 
     //为每个robot找到目标
     for (int i = 0; i < 4; i++) {
         if (!robots[i].target.empty()) continue;
         int target1 = 0;int target2 = 0;
-        int minDistance = 70;
+        float minDistance = 70;
         bool haveproduct = 0;
         for (int j = 0 ; j < amountOfWorkbench; j++) {
             if (workbenchs[j].target & (1 << workbenchs[j].type)) continue; //已预定则跳过
@@ -153,7 +157,7 @@ void findTargetForRobots() {
                         }
                     }
                     if (whichSellEmpty == -1) continue;
-                    int tempDistance = Distance[abs(robots[i].indexX - workbenchs[j].indexX)][abs(robots[i].indexY - workbenchs[j].indexY)] + workbenchs[j].nearestSellWorkbench[whichSellEmpty].distance;
+                    float tempDistance = Distance[abs(robots[i].indexX - workbenchs[j].indexX)][abs(robots[i].indexY - workbenchs[j].indexY)] + workbenchs[j].nearestSellWorkbench[whichSellEmpty].distance;
                     if (tempDistance < minDistance) {
                         minDistance = tempDistance;
                         target1 = j;
@@ -173,7 +177,7 @@ void findTargetForRobots() {
                         }
                     }
                     if (whichSellEmpty == -1) continue;
-                    int tempDistance = Distance[abs(robots[i].indexX - workbenchs[j].indexX)][abs(robots[i].indexY - workbenchs[j].indexY)] + workbenchs[j].nearestSellWorkbench[whichSellEmpty].distance;
+                    float tempDistance = Distance[abs(robots[i].indexX - workbenchs[j].indexX)][abs(robots[i].indexY - workbenchs[j].indexY)] + workbenchs[j].nearestSellWorkbench[whichSellEmpty].distance;
                     if (tempDistance < minDistance) {
                         minDistance = tempDistance;
                         target1 = j;
@@ -195,21 +199,15 @@ bool outputCommand(int _frameID) {
     //买卖
     for (int i = 0; i < 4; i++) { 
         if (robots[i].inWhichWorkbench < 0) continue;
-        if (workbenchs[robots[i].inWhichWorkbench].type == robots[i].productInHand) {
+        if ( (robots[i].productInHand > 0) &&  (workbenchs[robots[i].inWhichWorkbench].material&(1<< robots[i].productInHand)) == 0 ) {
             printf("sell %d\n", i);
+            
+            for (int destarget_i = 0; destarget_i < robots[i].target.size(); destarget_i++) {
+
+            }
             robots[i].target.clear();
         }
-        if (workbenchs[robots[i].inWhichWorkbench].product|| robots[i].productInHand==0) {
-            printf("buy %d\n", i);
-            for (int whichSellEmpty_i = 0; whichSellEmpty_i < workbenchs[robots[i].inWhichWorkbench].nearestSellWorkbench.size(); whichSellEmpty_i++) { //找销售方
-                if ((workbenchs[(workbenchs[robots[i].inWhichWorkbench].nearestSellWorkbench[whichSellEmpty_i].ID)].material & (1 << workbenchs[robots[i].inWhichWorkbench].type)) == 0 &&
-                    (workbenchs[(workbenchs[robots[i].inWhichWorkbench].nearestSellWorkbench[whichSellEmpty_i].ID)].target & (1 << workbenchs[robots[i].inWhichWorkbench].type)) == 0) { //销售方无原材料且原材料未被预定，则
-                    robots[i].target.push_back(workbenchs[robots[i].inWhichWorkbench].nearestSellWorkbench[whichSellEmpty_i].ID);
-                    break;
-                }
-            }
-            if(robots[i].target.empty())    robots[i].target.push_back(workbenchs[robots[i].inWhichWorkbench].nearestSellWorkbench[0].ID);
-        }
+
     }
 
     findTargetForRobots();
@@ -228,27 +226,37 @@ bool outputCommand(int _frameID) {
                     targetOritation = 3.1515926 - targetOritation;
             }
         }
-        double angleSpeed = (targetOritation - robots[robotId].orientation) * 20;
-        float lineSpeed = Distance[abs(robots[robotId].indexX- workbenchs[robots[robotId].target[0]].indexX)] [abs(robots[robotId].indexY - workbenchs[robots[robotId].target[0]].indexY)];
-        if (lineSpeed >= 0 && lineSpeed < 0.5) {
-            lineSpeed = 0.5;
+        double deltaOritation = targetOritation - robots[robotId].orientation;
+        if (deltaOritation <= -3.1415926) {
+            deltaOritation = 2 * 3.1415926 + deltaOritation;
         }
-        else if (lineSpeed < 0 && lineSpeed > -0.5) {
-            lineSpeed = -0.5;
+        else if (deltaOritation >= 3.1415926) {
+            deltaOritation = deltaOritation - 2 * 3.1415926;
         }
-        printf("forward %d %f\n", robotId, 0.5); //lineSpeed  测试
+        double angleSpeed = deltaOritation * 20; //正数：表示逆时针。
+        //float lineSpeed = Distance[abs(robots[robotId].indexX- workbenchs[robots[robotId].target[0]].indexX)] [abs(robots[robotId].indexY - workbenchs[robots[robotId].target[0]].indexY)]*(0.5*3.14159626- abs(deltaOritation));
+        float lineSpeed = ((robots[robotId].x-workbenchs[robots[robotId].target[0]].x)* (robots[robotId].x - workbenchs[robots[robotId].target[0]].x)+
+            (robots[robotId].y - workbenchs[robots[robotId].target[0]].y) * (robots[robotId].y - workbenchs[robots[robotId].target[0]].y))
+            * (0.5 * 3.14159626 - abs(deltaOritation)) * 0.5;
+        if (lineSpeed >= 0 && lineSpeed < 0.2) {
+            lineSpeed = 0.2;
+        }
+        else if (lineSpeed < 0 && lineSpeed > -0.2) {
+            lineSpeed = -0.2;
+        }
+        printf("forward %d %f\n", robotId, lineSpeed); //lineSpeed  测试
         printf("rotate %d %f\n", robotId, angleSpeed);
         //fprintf(stderr, "forward %d %d\n", robotId, lineSpeed);
         //fprintf(stderr, "rotate %d %f\n", robotId, angleSpeed);
     }
     //////////////////////////////////
-    int debugi = 1;
-    if (!robots[debugi].target.empty()) {
-        fprintf(stderr, "target %d type %d", robots[debugi].target[0],workbenchs[robots[debugi].target[0]].type);
-        if(robots[debugi].target.size()>1) fprintf(stderr, "    target %d type %d", robots[debugi].target[1], workbenchs[robots[debugi].target[1]].type);
-        fprintf(stderr, "\n");
-        fprintf(stderr, "x y %f %f\n", robots[debugi].x, robots[debugi].y);
-    }
+    //int debugi = 1;
+    //if (!robots[debugi].target.empty()) {
+    //    fprintf(stderr, "target %d type %d", robots[debugi].target[0],workbenchs[robots[debugi].target[0]].type);
+    //    if(robots[debugi].target.size()>1) fprintf(stderr, "    target %d type %d", robots[debugi].target[1], workbenchs[robots[debugi].target[1]].type);
+    //    fprintf(stderr, "\n");
+    //    fprintf(stderr, "x y %f %f\n", robots[debugi].x, robots[debugi].y);
+    //}
     //////////////////////////////////
     printf("OK\n");
     fflush(stdout);
