@@ -21,9 +21,9 @@ struct workbench {
     int indexX;
     int indexY;//从0开始
     int frameLeft;//剩余生产时间（帧数） -1：表示没有生产。0：表示生产因输出格满而阻塞。>=0：表示剩余生产帧数。
-    int material;//二进制位表描述，例如 48(110000)表示拥有物品 4 和 5。
+    int material;//二进制位表描述，例如 48(110000)表示拥有物品 4 和 5。 product表示是否有产品
     int target;//是否被作为了robot的抵达目的地。二进制位表描述，例如 48(110000)表示物品4和5，被预定了。
-    int product;
+    int product;//表示是否有产品
     vector<nearWorkbench> nearestSellWorkbench;
     vector<nearWorkbench> nearestWorkbench;
 };
@@ -141,7 +141,7 @@ void findTargetForRobots() {
     //为每个robot找到目标
     for (int i = 0; i < 4; i++) {
         if (!robots[i].target.empty()) continue;
-        int target1 = 0;int target2 = 0;
+        int target1 = 0; int target2 = 0;
         float minDistance = 70;
         bool haveproduct = 0;
         for (int j = 0 ; j < amountOfWorkbench; j++) {
@@ -187,6 +187,7 @@ void findTargetForRobots() {
 
             }
         }
+        if(target1==0&&target2==0) continue; //debug
         workbenchs[target1].target |= (1 << workbenchs[target1].type);//预定
         workbenchs[target2].target |= (1 << workbenchs[target1].type);
         robots[i].target.push_back(target1); robots[i].target.push_back(target2);
@@ -202,10 +203,14 @@ bool outputCommand(int _frameID) {
         if ( robots[i].inWhichWorkbench ==  robots[i].target[0] ) {
             if(robots[i].productInHand){
                 printf("sell %d\n", i);
+                workbenchs[robots[i].inWhichWorkbench].target&= (~(1<<robots[i].productInHand));
+                workbenchs[robots[i].inWhichWorkbench].material |= (1<<robots[i].productInHand);
             }else{
                 printf("buy %d\n", i);
+                workbenchs[robots[i].inWhichWorkbench].target&= (~(1<<workbenchs[robots[i].target[1]].type));
+                workbenchs[robots[i].inWhichWorkbench].product=0;
+
             }
-            workbenchs[robots[i].target[0]].target|=(1<<robots[i].productInHand);
             robots[i].target.erase(robots[i].target.begin());
         }
 
@@ -214,6 +219,10 @@ bool outputCommand(int _frameID) {
     findTargetForRobots();
 
     for (int robotId = 0; robotId < 4; robotId++) {
+        if(robots[robotId].target.empty()) {//debug
+            printf("forward %d %d\n", robotId, 0);
+            continue; 
+        }
         float targetOritation;
         if (workbenchs[robots[robotId].target[0]].x - robots[robotId].x == 0) {
             targetOritation = ((workbenchs[robots[robotId].target[0]].y > robots[robotId].y) ? (3.1415926 / 2) : ( - 3.1415926 / 2) );
@@ -259,7 +268,7 @@ bool outputCommand(int _frameID) {
         //fprintf(stderr, "forward %d %d\n", robotId, lineSpeed);
         //fprintf(stderr, "rotate %d %f\n", robotId, angleSpeed);
     //////////////////////////////////
-    if(robotId==1){
+    if(1){
         int debugi = robotId;
         fprintf(stderr,"robotId: %d*******************************************\n",debugi);
         if (!robots[debugi].target.empty()) {
