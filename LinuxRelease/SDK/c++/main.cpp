@@ -197,18 +197,18 @@ bool outputCommand(int _frameID) {
     printf("%d\n", _frameID);
 
     //买卖
-    for (int i = 0; i < 4; i++) { 
-        if (robots[i].inWhichWorkbench < 0) continue;
-        if ( (robots[i].productInHand > 0) &&  (workbenchs[robots[i].inWhichWorkbench].material&(1<< robots[i].productInHand)) == 0 ) {
-            printf("sell %d\n", i);
+    // for (int i = 0; i < 4; i++) { 
+    //     if (robots[i].inWhichWorkbench < 0) continue;
+    //     if ( (robots[i].productInHand > 0) &&  (workbenchs[robots[i].inWhichWorkbench].material&(1<< robots[i].productInHand)) == 0 ) {
+    //         printf("sell %d\n", i);
             
-            for (int destarget_i = 0; destarget_i < robots[i].target.size(); destarget_i++) {
+    //         for (int destarget_i = 0; destarget_i < robots[i].target.size(); destarget_i++) {
 
-            }
-            robots[i].target.clear();
-        }
+    //         }
+    //         robots[i].target.clear();
+    //     }
 
-    }
+    // }
 
     findTargetForRobots();
 
@@ -221,9 +221,9 @@ bool outputCommand(int _frameID) {
             targetOritation = atan((workbenchs[robots[robotId].target[0]].y - robots[robotId].y) / (workbenchs[robots[robotId].target[0]].x - robots[robotId].x));
             if (workbenchs[robots[robotId].target[0]].x < robots[robotId].x) {
                 if (targetOritation < 0)
-                    targetOritation = -3.1515926 - targetOritation;
+                    targetOritation = 3.1415926 + targetOritation;
                 else
-                    targetOritation = 3.1515926 - targetOritation;
+                    targetOritation = -3.1415926 + targetOritation;
             }
         }
         double deltaOritation = targetOritation - robots[robotId].orientation;
@@ -233,31 +233,45 @@ bool outputCommand(int _frameID) {
         else if (deltaOritation >= 3.1415926) {
             deltaOritation = deltaOritation - 2 * 3.1415926;
         }
-        double angleSpeed = deltaOritation * 20; //正数：表示逆时针。
+        double angleSpeed = deltaOritation * 2; //正数：表示逆时针。
         //float lineSpeed = Distance[abs(robots[robotId].indexX- workbenchs[robots[robotId].target[0]].indexX)] [abs(robots[robotId].indexY - workbenchs[robots[robotId].target[0]].indexY)]*(0.5*3.14159626- abs(deltaOritation));
-        float lineSpeed = ((robots[robotId].x-workbenchs[robots[robotId].target[0]].x)* (robots[robotId].x - workbenchs[robots[robotId].target[0]].x)+
-            (robots[robotId].y - workbenchs[robots[robotId].target[0]].y) * (robots[robotId].y - workbenchs[robots[robotId].target[0]].y))
-            * (0.5 * 3.14159626 - abs(deltaOritation)) * 0.5;
-        if (lineSpeed >= 0 && lineSpeed < 0.2) {
-            lineSpeed = 0.2;
+        float tempDistancePow = (robots[robotId].x - workbenchs[robots[robotId].target[0]].x) * (robots[robotId].x - workbenchs[robots[robotId].target[0]].x) +
+            (robots[robotId].y - workbenchs[robots[robotId].target[0]].y) * (robots[robotId].y - workbenchs[robots[robotId].target[0]].y);
+        int lineSpeed;
+        if(tempDistancePow>=100){
+            lineSpeed=100; 
+        }else {
+            lineSpeed=3;
         }
-        else if (lineSpeed < 0 && lineSpeed > -0.2) {
-            lineSpeed = -0.2;
+        lineSpeed = lineSpeed * (0.5 * 3.14159626 - abs(deltaOritation)) ;
+        if (tempDistancePow < 8 && abs(deltaOritation)>3.1415926 / 6) lineSpeed = 0;
+        else if (tempDistancePow < 8 && abs(deltaOritation) <= 3.1415926 / 6) {
+            if (lineSpeed >= 0) {
+                lineSpeed = 1;
+            }
+            else if (lineSpeed < 0 ) {
+                lineSpeed = -1;
+            }
         }
-        printf("forward %d %f\n", robotId, lineSpeed); //lineSpeed  测试
+        printf("forward %d %d\n", robotId, lineSpeed); //lineSpeed  测试
         printf("rotate %d %f\n", robotId, angleSpeed);
         //fprintf(stderr, "forward %d %d\n", robotId, lineSpeed);
         //fprintf(stderr, "rotate %d %f\n", robotId, angleSpeed);
+    //////////////////////////////////
+    if(robotId==1){
+        int debugi = robotId;
+        fprintf(stderr,"robotId: %d*******************************************\n",debugi);
+        if (!robots[debugi].target.empty()) {
+            fprintf(stderr, "target %d type %d", robots[debugi].target[0],workbenchs[robots[debugi].target[0]].type);
+            if(robots[debugi].target.size()>1) fprintf(stderr, "    target %d type %d", robots[debugi].target[1], workbenchs[robots[debugi].target[1]].type);
+            fprintf(stderr, "\n");
+        }
+        fprintf(stderr, "targetx:%f targety:%f\n", workbenchs[robots[debugi].target[0]].x, workbenchs[robots[debugi].target[0]].x);
+        fprintf(stderr, "robotx:%f roboty:%f orientation:%f deltaOritation:%f\n", robots[debugi].x, robots[debugi].y,robots[debugi].orientation ,deltaOritation);
     }
     //////////////////////////////////
-    //int debugi = 1;
-    //if (!robots[debugi].target.empty()) {
-    //    fprintf(stderr, "target %d type %d", robots[debugi].target[0],workbenchs[robots[debugi].target[0]].type);
-    //    if(robots[debugi].target.size()>1) fprintf(stderr, "    target %d type %d", robots[debugi].target[1], workbenchs[robots[debugi].target[1]].type);
-    //    fprintf(stderr, "\n");
-    //    fprintf(stderr, "x y %f %f\n", robots[debugi].x, robots[debugi].y);
-    //}
-    //////////////////////////////////
+
+    }
     printf("OK\n");
     fflush(stdout);
     return 1;

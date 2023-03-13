@@ -1,0 +1,28 @@
+/home/lyhwsl/hw_software_challenge/LinuxRelease/SDK/c++/main.cpp: In function ‘bool outputCommand(int)’:
+/home/lyhwsl/hw_software_challenge/LinuxRelease/SDK/c++/main.cpp:250:29: warning: format ‘%f’ expects argument of type ‘double’, but argument 3 has type ‘int’ [-Wformat=]
+  250 |         printf("forward %d %f\n", robotId, 0); //lineSpeed  测试
+      |                            ~^              ~
+      |                             |              |
+      |                             double         int
+      |                            %d
+/home/lyhwsl/hw_software_challenge/LinuxRelease/SDK/c++/main.cpp:257:17: error: cannot convert ‘const char*’ to ‘FILE*’
+  257 |         fprintf("robotId: %d*******************************************\n",debugi);
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                 |
+      |                 const char*
+In file included from /usr/include/c++/11/cstdio:42,
+                 from /usr/include/c++/11/ext/string_conversions.h:43,
+                 from /usr/include/c++/11/bits/basic_string.h:6608,
+                 from /usr/include/c++/11/string:55,
+                 from /usr/include/c++/11/bits/locale_classes.h:40,
+                 from /usr/include/c++/11/bits/ios_base.h:41,
+                 from /usr/include/c++/11/ios:42,
+                 from /usr/include/c++/11/ostream:38,
+                 from /usr/include/c++/11/iostream:39,
+                 from /home/lyhwsl/hw_software_challenge/LinuxRelease/SDK/c++/main.cpp:1:
+/usr/include/stdio.h:350:38: note:   initializing argument 1 of ‘int fprintf(FILE*, const char*, ...)’
+  350 | extern int fprintf (FILE *__restrict __stream,
+      |                     ~~~~~~~~~~~~~~~~~^~~~~~~~
+make[2]: *** [CMakeFiles/main.dir/build.make:76: CMakeFiles/main.dir/main.cpp.o] Error 1
+make[1]: *** [CMakeFiles/Makefile2:83: CMakeFiles/main.dir/all] Error 2
+make: *** [Makefile:91: all] Error 2
