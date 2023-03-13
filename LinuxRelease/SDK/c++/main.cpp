@@ -40,7 +40,7 @@ struct robot {
     float y; //坐标
     int indexX;
     int indexY;//从0开始
-    vector<int> target;
+    vector<int> target; //ID从0到amountOfWorkbench-1
 };
 robot robots[4];
 workbench workbenchs[50];
@@ -197,18 +197,19 @@ bool outputCommand(int _frameID) {
     printf("%d\n", _frameID);
 
     //买卖
-    // for (int i = 0; i < 4; i++) { 
-    //     if (robots[i].inWhichWorkbench < 0) continue;
-    //     if ( (robots[i].productInHand > 0) &&  (workbenchs[robots[i].inWhichWorkbench].material&(1<< robots[i].productInHand)) == 0 ) {
-    //         printf("sell %d\n", i);
-            
-    //         for (int destarget_i = 0; destarget_i < robots[i].target.size(); destarget_i++) {
+    for (int i = 0; i < 4; i++) { 
+        if(robots[i].target.empty()) continue;
+        if ( robots[i].inWhichWorkbench ==  robots[i].target[0] ) {
+            if(robots[i].productInHand){
+                printf("sell %d\n", i);
+            }else{
+                printf("buy %d\n", i);
+            }
+            workbenchs[robots[i].target[0]].target|=(1<<robots[i].productInHand);
+            robots[i].target.erase(robots[i].target.begin());
+        }
 
-    //         }
-    //         robots[i].target.clear();
-    //     }
-
-    // }
+    }
 
     findTargetForRobots();
 
