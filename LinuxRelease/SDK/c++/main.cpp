@@ -142,10 +142,10 @@ void findTargetForRobots() {
     for (int i = 0; i < 4; i++) {
         if (!robots[i].target.empty()) continue;
         int target1 = 0; int target2 = 0;
-        float minDistance = 70;
+        float minDistance = 700;
         bool haveproduct = 0;
         for (int j = 0 ; j < amountOfWorkbench; j++) {
-            if (workbenchs[j].target & (1 << workbenchs[j].type)) continue; //已预定则跳过
+            if (workbenchs[j].target & (1 << workbenchs[j].type)) { fprintf(stderr,"workbenchs[%d]的产品已预定\n",j);   continue;} //已预定则跳过
             if (haveproduct) {
                 if (workbenchs[j].product) {
                     int whichSellEmpty = -1;
@@ -207,11 +207,16 @@ bool outputCommand(int _frameID) {
                 workbenchs[robots[i].inWhichWorkbench].material |= (1<<robots[i].productInHand);
             }else{
                 printf("buy %d\n", i);
-                workbenchs[robots[i].inWhichWorkbench].target&= (~(1<<workbenchs[robots[i].target[1]].type));
+                workbenchs[robots[i].inWhichWorkbench].target&= (~(1<<workbenchs[robots[i].target[0]].type));
                 workbenchs[robots[i].inWhichWorkbench].product=0;
 
             }
             robots[i].target.erase(robots[i].target.begin());
+            ///////////////////////
+            for (int j = 0 ; j < amountOfWorkbench; j++) {
+            if (workbenchs[j].target & (1 << workbenchs[j].type)) { fprintf(stderr,"workbenchs[%d]的产品已预定\n",j);   continue;} //已预定则跳过
+            }
+            ///////////////////////
         }
 
     }
@@ -270,7 +275,12 @@ bool outputCommand(int _frameID) {
     //////////////////////////////////
     if(1){
         int debugi = robotId;
-        fprintf(stderr,"robotId: %d*******************************************\n",debugi);
+        fprintf(stderr,"robotId: %d",debugi); 
+        for(int i=0;i<10;i++){
+            fprintf(stderr,"%d",debugi); 
+        }
+        fprintf(stderr,"\n"); 
+
         if (!robots[debugi].target.empty()) {
             fprintf(stderr, "target %d type %d", robots[debugi].target[0],workbenchs[robots[debugi].target[0]].type);
             if(robots[debugi].target.size()>1) fprintf(stderr, "    target %d type %d", robots[debugi].target[1], workbenchs[robots[debugi].target[1]].type);
