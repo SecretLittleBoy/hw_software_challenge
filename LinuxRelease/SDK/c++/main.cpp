@@ -8,6 +8,7 @@ char line[1024];
 int money;
 extern float Distance[100][100];
 extern bool isSellWorkbench[10][10];
+extern int benefitsOfType[8];
 int amountOfWorkbench;
 struct nearWorkbench {
     int ID;
@@ -118,11 +119,8 @@ bool readFrameUntilOK() {
         robots[i].indexX = (robots[i].x - 0.25) * 2;
         robots[i].indexY = (robots[i].y - 0.25) * 2;
     }
-    while (fgets(line, sizeof line, stdin)) {
-        if (line[0] == 'O' && line[1] == 'K') {
-            return true;
-        }
-    }
+    while (getchar()!='K') ;
+    getchar();
     return 1;
 }
 //bool readUntilOK() {
@@ -158,6 +156,7 @@ void findTargetForRobots() {
                     }
                     if (whichSellEmpty == -1) continue;
                     float tempDistance = Distance[abs(robots[i].indexX - workbenchs[j].indexX)][abs(robots[i].indexY - workbenchs[j].indexY)] + workbenchs[j].nearestSellWorkbench[whichSellEmpty].distance;
+                    tempDistance/=benefitsOfType[workbenchs[j].type];//考虑收益
                     if (tempDistance < minDistance) {
                         minDistance = tempDistance;
                         target1 = j;
@@ -178,6 +177,7 @@ void findTargetForRobots() {
                     }
                     if (whichSellEmpty == -1) continue;
                     float tempDistance = Distance[abs(robots[i].indexX - workbenchs[j].indexX)][abs(robots[i].indexY - workbenchs[j].indexY)] + workbenchs[j].nearestSellWorkbench[whichSellEmpty].distance;
+                    tempDistance/=benefitsOfType[workbenchs[j].type];//考虑收益
                     if (tempDistance < minDistance) {
                         minDistance = tempDistance;
                         target1 = j;
@@ -194,7 +194,7 @@ void findTargetForRobots() {
     }
 }
 
-bool outputCommand(int _frameID) {
+bool outputCommand(int& _frameID) {
     printf("%d\n", _frameID);
 
     //买卖
