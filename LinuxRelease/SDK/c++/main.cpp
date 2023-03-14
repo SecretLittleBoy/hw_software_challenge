@@ -253,14 +253,16 @@ bool outputCommand(int& _frameID) {
         float tempDistancePow = (robots[robotId].x - workbenchs[robots[robotId].target[0]].x) * (robots[robotId].x - workbenchs[robots[robotId].target[0]].x) +
             (robots[robotId].y - workbenchs[robots[robotId].target[0]].y) * (robots[robotId].y - workbenchs[robots[robotId].target[0]].y);
         int lineSpeed;
-        if(tempDistancePow>=100){
+        if(tempDistancePow>=16){
             lineSpeed=100; 
-        }else {
+        }else if(tempDistancePow>=2){
+            lineSpeed=5;
+        }else{
             lineSpeed=3;
         }
         lineSpeed = lineSpeed * (0.5 * 3.14159626 - abs(deltaOritation)) ;
-        if (tempDistancePow < 8 && abs(deltaOritation)>3.1415926 / 6) lineSpeed = 0;
-        else if (tempDistancePow < 8 && abs(deltaOritation) <= 3.1415926 / 6) {
+        if (tempDistancePow < 4 && abs(deltaOritation)>3.1415926 / 6) lineSpeed = 0;
+        else if (tempDistancePow < 1 && abs(deltaOritation) <= 3.1415926 / 6) {
             if (lineSpeed >= 0) {
                 lineSpeed = 1;
             }
