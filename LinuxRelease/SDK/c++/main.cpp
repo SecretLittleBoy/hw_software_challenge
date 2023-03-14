@@ -3,6 +3,7 @@
 #include "distance.h"
 #include<vector>
 #include <algorithm>
+#include <unistd.h>
 using namespace std;
 char line[1024];
 int money;
@@ -139,8 +140,8 @@ void findTargetForRobots() {
     //为每个robot找到目标
     for (int i = 0; i < 4; i++) {
         if (!robots[i].target.empty()) continue;
-        int target1 = 0; int target2 = 0;
-        float minDistance = 700;
+        int target1 = -1; int target2 = -1;
+        float minDistance = 7000000000;
         bool haveproduct = 0;
         for (int j = 0 ; j < amountOfWorkbench; j++) {
             if (workbenchs[j].target & (1 << workbenchs[j].type)) { fprintf(stderr,"workbenchs[%d]的产品已预定\n",j);   continue;} //已预定则跳过
@@ -187,43 +188,47 @@ void findTargetForRobots() {
 
             }
         }
-        if(target1==0&&target2==0) continue; //debug
+        if(target1==-1&&target2==-1) continue; //debug
         workbenchs[target1].target |= (1 << workbenchs[target1].type);//预定
         workbenchs[target2].target |= (1 << workbenchs[target1].type);
         robots[i].target.push_back(target1); robots[i].target.push_back(target2);
     }
 }
 
-bool outputCommand(int& _frameID) {
-    printf("%d\n", _frameID);
-
-    //买卖
+void buyAndSell(){
+        //买卖
     for (int i = 0; i < 4; i++) { 
         if(robots[i].target.empty()) continue;
         if ( robots[i].inWhichWorkbench ==  robots[i].target[0] ) {
-            if(robots[i].productInHand){
+            if(robots[i].target.size()==1){
                 printf("sell %d\n", i);
                 workbenchs[robots[i].inWhichWorkbench].target&= (~(1<<robots[i].productInHand));
                 workbenchs[robots[i].inWhichWorkbench].material |= (1<<robots[i].productInHand);
             }else{
+                if(workbenchs[robots[i].inWhichWorkbench].product==0) continue;
                 printf("buy %d\n", i);
                 workbenchs[robots[i].inWhichWorkbench].target&= (~(1<<workbenchs[robots[i].target[0]].type));
                 workbenchs[robots[i].inWhichWorkbench].product=0;
-
             }
             robots[i].target.erase(robots[i].target.begin());
-            ///////////////////////
-            for (int j = 0 ; j < amountOfWorkbench; j++) {
-            if (workbenchs[j].target & (1 << workbenchs[j].type)) { fprintf(stderr,"workbenchs[%d]的产品已预定\n",j);   continue;} //已预定则跳过
-            }
-            ///////////////////////
         }
-
     }
+}
 
+bool outputCommand(int& _frameID) {
+    printf("%d\n", _frameID);
+    buyAndSell();
     findTargetForRobots();
 
+    bool isAvoidCrush[4]={0};
+    for (int i = 0; i < 4; i++) {
+        for(int j=0; j < i; j++ ){
+            if(  Distance[ abs(robots[i].indexX-robots[j].indexX) ] [ abs(robots[i].indexY-robots[j].indexY) ] > 2.5)  continue;//sleep(1000);
+        } 
+    }
+
     for (int robotId = 0; robotId < 4; robotId++) {
+        if(isAvoidCrush[robotId]) continue;
         if(robots[robotId].target.empty()) {//debug
             printf("forward %d %d\n", robotId, 0);
             continue; 
@@ -295,6 +300,11 @@ bool outputCommand(int& _frameID) {
 
     }
     printf("OK\n");
+    ///////////////////////
+    for (int j = 0 ; j < amountOfWorkbench; j++) {
+        if (workbenchs[j].target & (1 << workbenchs[j].type)) { fprintf(stderr,"workbenchs[%d]的产品已预定\n",j);   continue;} //已预定则跳过
+    }
+    ///////////////////////
     fflush(stdout);
     return 1;
 }
